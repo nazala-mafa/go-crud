@@ -11,7 +11,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func AuthMiddleware(db *gorm.DB) gin.HandlerFunc {
+func AuthMiddleware(db *gorm.DB, cfg *config.Config) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		authHeader := c.GetHeader("Authorization")
 
@@ -52,7 +52,7 @@ func AuthMiddleware(db *gorm.DB) gin.HandlerFunc {
 			tokenString,
 			func(token *jwt.Token) (any, error) {
 				return []byte(
-					config.Jwt.Secret,
+					cfg.Jwt.Secret,
 				), nil
 			},
 		)

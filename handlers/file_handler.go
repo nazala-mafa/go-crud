@@ -10,10 +10,14 @@ import (
 	"github.com/nazala-mafa/go-crud/config"
 )
 
-type FileHandler struct{}
+type FileHandler struct {
+	cfg *config.Config
+}
 
-func NewFileHandler() *FileHandler {
-	return &FileHandler{}
+func NewFileHandler(cfg *config.Config) *FileHandler {
+	return &FileHandler{
+		cfg,
+	}
 }
 
 func (h *FileHandler) Upload(c *gin.Context) {
@@ -38,6 +42,6 @@ func (h *FileHandler) Upload(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{
 		"message": "uploaded",
-		"url":     config.App.Url + "/files/" + filename,
+		"url":     h.cfg.App.Url + "/files/" + filename,
 	})
 }

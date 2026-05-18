@@ -7,8 +7,8 @@ import (
 )
 
 func main() {
-	config.Load()
-	db := database.Connect()
+	cfg := config.Load()
+	db := database.Connect(cfg)
 
 	seeders.UserSeeder(db)
 	seeders.ProductSeeder(db)

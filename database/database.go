@@ -9,14 +9,14 @@ import (
 	"gorm.io/gorm"
 )
 
-func Connect() *gorm.DB {
+func Connect(cfg *config.Config) *gorm.DB {
 	dsn := fmt.Sprintf(
 		"%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=True&loc=Local",
-		config.DatabaseConfig.User,
-		config.DatabaseConfig.Password,
-		config.DatabaseConfig.Host,
-		config.DatabaseConfig.Port,
-		config.DatabaseConfig.Name,
+		cfg.Database.User,
+		cfg.Database.Password,
+		cfg.Database.Host,
+		cfg.Database.Port,
+		cfg.Database.Name,
 	)
 
 	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})

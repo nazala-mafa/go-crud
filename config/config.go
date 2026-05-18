@@ -7,7 +7,7 @@ import (
 	"github.com/joho/godotenv"
 )
 
-type databaseConfig struct {
+type DatabaseConfig struct {
 	Host     string
 	Port     string
 	User     string
@@ -15,42 +15,45 @@ type databaseConfig struct {
 	Name     string
 }
 
-type appConfig struct {
+type AppConfig struct {
 	Name string
 	Env  string
 	Url  string
 }
 
-type jwt struct {
+type JwtConfig struct {
 	Secret string
 }
 
-var DatabaseConfig databaseConfig
-var App appConfig
-var Jwt jwt
+type Config struct {
+	Database DatabaseConfig
+	App      AppConfig
+	Jwt      JwtConfig
+}
 
-func Load() {
+func Load() *Config {
 	err := godotenv.Load()
+
 	if err != nil {
 		log.Fatal(".env not found")
 	}
 
-	DatabaseConfig = databaseConfig{
-		Host:     getEnv("DB_HOST", "test"),
-		Port:     getEnv("DB_PORT", "test"),
-		User:     getEnv("DB_USER", "test"),
-		Password: getEnv("DB_PASSWORD", "test"),
-		Name:     getEnv("DB_NAME", "test"),
-	}
-
-	App = appConfig{
-		Name: getEnv("APP_NAME", "test"),
-		Env:  getEnv("APP_ENV", "test"),
-		Url:  getEnv("APP_URL", "test"),
-	}
-
-	Jwt = jwt{
-		Secret: getEnv("JWT_SECRET", "test"),
+	return &Config{
+		Database: DatabaseConfig{
+			Host:     getEnv("DB_HOST", "test"),
+			Port:     getEnv("DB_PORT", "test"),
+			User:     getEnv("DB_USER", "test"),
+			Password: getEnv("DB_PASSWORD", "test"),
+			Name:     getEnv("DB_NAME", "test"),
+		},
+		App: AppConfig{
+			Name: getEnv("APP_NAME", "test"),
+			Env:  getEnv("APP_ENV", "test"),
+			Url:  getEnv("APP_URL", "test"),
+		},
+		Jwt: JwtConfig{
+			Secret: getEnv("JWT_SECRET", "test"),
+		},
 	}
 }
 

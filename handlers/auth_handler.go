@@ -16,13 +16,12 @@ import (
 )
 
 type AuthHandler struct {
-	DB *gorm.DB
+	db  *gorm.DB
+	cfg *config.Config
 }
 
-func NewAuthHandler(db *gorm.DB) *AuthHandler {
-	return &AuthHandler{
-		DB: db,
-	}
+func NewAuthHandler(db *gorm.DB, cfg *config.Config) *AuthHandler {
+	return &AuthHandler{db, cfg}
 }
 
 func (h *AuthHandler) Login(c *gin.Context) {
@@ -37,7 +36,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 
 	var user models.User
 
-	if err := h.DB.Where("email = ?", payload.Email).First(&user).Error; err != nil {
+	if err := h.db.Where("email = ?", payload.Email).First(&user).Error; err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{
 			"message": "invalid credentials",
 		})
@@ -72,7 +71,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	)
 
 	tokenString, err := token.SignedString(
-		[]byte(config.Jwt.Secret),
+		[]byte(h.cfg.Jwt.Secret),
 	)
 
 	if err != nil {
@@ -94,7 +93,7 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 		"Bearer ",
 	)
 
-	err := h.DB.Create(&models.RevokedToken{
+	err := h.db.Create(&models.RevokedToken{
 		Token: token,
 	}).Error
 
@@ -106,6 +105,51 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 	}
 
 	c.Status(http.StatusNoContent)
+}
+
+func (h *AuthHandler) Register(c *gin.Context) {
+	var payload dto.RegisterRequest
+
+	if err := c.ShouldBindJSON(&payload); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"message": err.Error(),
+		})
+		return
+	}
+
+	var user models.User
+
+	if err := h.db.Where("email = ?", payload.Email).First(&user).Error; err == nil {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"message": "email already exists",
+		})
+		return
+	}
+
+	hash, err := bcrypt.GenerateFromPassword(
+		[]byte(payload.Password),
+		bcrypt.DefaultCost,
+	)
+
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"message": "failed hash password",
+		})
+		return
+	}
+
+	payload.Password = string(hash)
+
+	if err := h.db.Create(&user).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"message": err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "registered",
+	})
 }
 
 func (h *AuthHandler) Me(c *gin.Context) {

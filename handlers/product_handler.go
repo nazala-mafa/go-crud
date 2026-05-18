@@ -11,12 +11,13 @@ import (
 )
 
 type ProductHandler struct {
-	DB *gorm.DB
+	db  *gorm.DB
+	cfg *config.Config
 }
 
-func NewProductHandler(db *gorm.DB) *ProductHandler {
+func NewProductHandler(db *gorm.DB, cfg *config.Config) *ProductHandler {
 	return &ProductHandler{
-		DB: db,
+		db, cfg,
 	}
 }
 
@@ -28,7 +29,7 @@ type ProductResponse struct {
 func (h *ProductHandler) Index(c *gin.Context) {
 	var products []models.Product
 
-	if err := h.DB.Find(&products).Error; err != nil {
+	if err := h.db.Find(&products).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"message": err.Error(),
 		})
@@ -40,7 +41,7 @@ func (h *ProductHandler) Index(c *gin.Context) {
 	for _, p := range products {
 		results = append(results, ProductResponse{
 			Product: p,
-			Link:    config.App.Url + "/api/product/" + strconv.FormatUint(uint64(p.ID), 10),
+			Link:    h.cfg.App.Url + "/api/product/" + strconv.FormatUint(uint64(p.ID), 10),
 		})
 	}
 
@@ -51,7 +52,7 @@ func (h *ProductHandler) Show(c *gin.Context) {
 	id := c.Param("id")
 	var p models.Product
 
-	if err := h.DB.First(&p, id).Error; err != nil {
+	if err := h.db.First(&p, id).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"message": err.Error(),
 		})
@@ -70,7 +71,7 @@ func (h *ProductHandler) Create(c *gin.Context) {
 		return
 	}
 
-	if err := h.DB.Create(&payload).Error; err != nil {
+	if err := h.db.Create(&payload).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"message": err.Error(),
 		})
@@ -85,7 +86,7 @@ func (h *ProductHandler) Update(c *gin.Context) {
 
 	var product models.Product
 
-	if err := h.DB.First(&product, id).Error; err != nil {
+	if err := h.db.First(&product, id).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{
 			"message": "product not found",
 		})
@@ -101,7 +102,7 @@ func (h *ProductHandler) Update(c *gin.Context) {
 		return
 	}
 
-	if err := h.DB.Model(&product).Updates(payload).Error; err != nil {
+	if err := h.db.Model(&product).Updates(payload).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"message": err.Error(),
 		})
@@ -116,14 +117,14 @@ func (h *ProductHandler) Destroy(c *gin.Context) {
 
 	var product models.Product
 
-	if err := h.DB.First(&product, id).Error; err != nil {
+	if err := h.db.First(&product, id).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{
 			"message": "product not found",
 		})
 		return
 	}
 
-	if err := h.DB.Delete(&product, id).Error; err != nil {
+	if err := h.db.Delete(&product, id).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{
 			"message": "product not found",
 		})

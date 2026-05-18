@@ -12,13 +12,12 @@ import (
 )
 
 type UserHandler struct {
-	DB *gorm.DB
+	db  *gorm.DB
+	cfg *config.Config
 }
 
-func NewUserHandler(db *gorm.DB) *UserHandler {
-	return &UserHandler{
-		DB: db,
-	}
+func NewUserHandler(db *gorm.DB, cfg *config.Config) *UserHandler {
+	return &UserHandler{db, cfg}
 }
 
 type UserResponse struct {
@@ -29,7 +28,7 @@ type UserResponse struct {
 func (h *UserHandler) Index(c *gin.Context) {
 	var users []models.User
 
-	if err := h.DB.Find(&users).Error; err != nil {
+	if err := h.db.Find(&users).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"message": err.Error(),
 		})
@@ -41,7 +40,7 @@ func (h *UserHandler) Index(c *gin.Context) {
 	for _, p := range users {
 		results = append(results, UserResponse{
 			User: p,
-			Link: config.App.Url + "/api/user/" + strconv.FormatUint(uint64(p.ID), 10),
+			Link: h.cfg.App.Url + "/api/user/" + strconv.FormatUint(uint64(p.ID), 10),
 		})
 	}
 
@@ -52,7 +51,7 @@ func (h *UserHandler) Show(c *gin.Context) {
 	id := c.Param("id")
 	var p models.User
 
-	if err := h.DB.First(&p, id).Error; err != nil {
+	if err := h.db.First(&p, id).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"message": err.Error(),
 		})
@@ -81,7 +80,7 @@ func (h *UserHandler) Create(c *gin.Context) {
 
 	payload.Password = string(hash)
 
-	if err := h.DB.Create(&payload).Error; err != nil {
+	if err := h.db.Create(&payload).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"message": err.Error(),
 		})
@@ -96,7 +95,7 @@ func (h *UserHandler) Update(c *gin.Context) {
 
 	var user models.User
 
-	if err := h.DB.First(&user, id).Error; err != nil {
+	if err := h.db.First(&user, id).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{
 			"message": "user not found",
 		})
@@ -122,7 +121,7 @@ func (h *UserHandler) Update(c *gin.Context) {
 
 	payload.Password = string(hash)
 
-	if err := h.DB.Model(&user).Updates(payload).Error; err != nil {
+	if err := h.db.Model(&user).Updates(payload).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"message": err.Error(),
 		})
@@ -137,14 +136,14 @@ func (h *UserHandler) Destroy(c *gin.Context) {
 
 	var user models.User
 
-	if err := h.DB.First(&user, id).Error; err != nil {
+	if err := h.db.First(&user, id).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{
 			"message": "user not found",
 		})
 		return
 	}
 
-	if err := h.DB.Delete(&user, id).Error; err != nil {
+	if err := h.db.Delete(&user, id).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{
 			"message": "user not found",
 		})
