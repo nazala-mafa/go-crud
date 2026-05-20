@@ -15,6 +15,7 @@ func Routes(r *gin.Engine, db *gorm.DB, cfg *config.Config) {
 	productHandler := handlers.NewProductHandler(db, cfg)
 	userHandler := handlers.NewUserHandler(db, cfg)
 
+	r.GET("/", homeHandler.Index)
 	api := r.Group("/api")
 	{
 		// Public routes
