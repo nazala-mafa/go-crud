@@ -1,7 +1,9 @@
 package middlewares
 
 import (
+	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -74,8 +76,12 @@ func AuthMiddleware(db *gorm.DB, cfg *config.Config) gin.HandlerFunc {
 			return
 		}
 
-		c.Set("user_id", claims["sub"])
+		sub := claims["sub"].(float64)
+		c.Set("user_id", strconv.FormatInt(int64(sub), 10))
+		c.Set("user", claims["user"])
 		c.Set("email", claims["email"])
+		fmt.Println(claims)
+		fmt.Printf("%T\n", claims["sub"])
 
 		c.Next()
 	}

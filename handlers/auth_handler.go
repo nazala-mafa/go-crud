@@ -66,6 +66,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		jwt.MapClaims{
 			"sub":   user.ID,
 			"email": user.Email,
+			"user":  user.Name,
 			"exp":   time.Now().Add(exp).Unix(),
 		},
 	)

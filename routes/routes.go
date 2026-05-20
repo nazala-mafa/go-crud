@@ -15,6 +15,8 @@ func Routes(r *gin.Engine, db *gorm.DB, cfg *config.Config) {
 	productHandler := handlers.NewProductHandler(db, cfg)
 	userHandler := handlers.NewUserHandler(db, cfg)
 
+	rbac := middlewares.NewRBAC(db)
+
 	r.GET("/", homeHandler.Index)
 	api := r.Group("/api")
 	{
@@ -34,10 +36,22 @@ func Routes(r *gin.Engine, db *gorm.DB, cfg *config.Config) {
 			products := auth.Group("/product")
 			{
 				products.GET("/", productHandler.Index)
-				products.POST("/", productHandler.Create)
+				products.POST(
+					"/",
+					rbac.AuthorizeMiddleware("products", "create"),
+					productHandler.Create,
+				)
 				products.GET("/:id", productHandler.Show)
-				products.PUT("/:id", productHandler.Update)
-				products.DELETE("/:id", productHandler.Destroy)
+				products.PUT(
+					"/:id",
+					rbac.AuthorizeMiddleware("products", "update"),
+					productHandler.Update,
+				)
+				products.DELETE(
+					"/:id",
+					rbac.AuthorizeMiddleware("products", "delete"),
+					productHandler.Destroy,
+				)
 			}
 
 			users := auth.Group("/user")

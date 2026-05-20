@@ -12,4 +12,5 @@ func main() {
 
 	seeders.UserSeeder(db)
 	seeders.ProductSeeder(db)
+	seeders.RbacSeeder(db)
 }

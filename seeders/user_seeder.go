@@ -37,6 +37,11 @@ func UserSeeder(db *gorm.DB) {
 		p.DeletedAt = gorm.DeletedAt{}
 		p.AvatarURL = "https://placehold.co/640x480/png?text=et-dolores-nulla-eum-sit-atque&w=640&q=75"
 
+		if i == 0 {
+			p.Name = "test"
+			p.Email = "test@example.com"
+		}
+
 		users = append(users, p)
 	}
 
